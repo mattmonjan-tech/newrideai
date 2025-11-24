@@ -1,22 +1,31 @@
 
 # RideSmart AI
 
-The Intelligent Future of Student Safety.
+**STATUS: SYSTEM RESTORED (v47)**
+
+The application components have been successfully regenerated.
+
+## 🚀 Deployment Instructions
+
+1.  **Push to GitHub:**
+    ```bash
+    git add .
+    git commit -m "Restored all components and fixed Vite config"
+    git push origin main
+    ```
+
+2.  **Vercel:**
+    *   The deployment should trigger automatically.
+    *   If it fails, go to **Settings > Git** and disconnect/reconnect the repo to clear the cache.
 
 ## Features
 
-*   **Real-time GPS Fleet Tracking:** Live location updates with 1-second latency.
-*   **AI Route Optimization:** Gemini-powered algorithms for efficiency.
-*   **RFID Student Ridership:** Know exactly when and where students board.
-*   **Maintenance Console:** Digital ticketing system for mechanics.
-*   **Parent Portal:** Secure app for guardians.
+*   **Real-time Fleet Tracking:** Simulated GPS movement.
+*   **AI Optimization:** Route analysis using Gemini.
+*   **RFID Simulation:** Student boarding/alighting tracking.
+*   **Maintenance Console:** Digital ticketing system.
 
-## Installation
+## Environment
 
-1.  `npm install`
-2.  `npm run dev`
-
-## Environment Variables
-
-Create a `.env` file:
-`VITE_API_KEY=your_gemini_key`
+Ensure your Vercel Project Settings > Environment Variables has:
+`API_KEY` = (Your Google Gemini API Key)
