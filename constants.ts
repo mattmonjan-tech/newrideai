@@ -1,3 +1,4 @@
+
 import { BusRoute, BusStatus, Student, StudentStatus, LogEntry, Tenant, Invoice, QuoteRequest, PurchaseOrder, DeviceGuide, PricingConfig, BudgetEntry, MaintenanceTicket } from "./types";
 
 export const INITIAL_ROUTES: BusRoute[] = [
@@ -58,6 +59,7 @@ export const INITIAL_ROUTES: BusRoute[] = [
     vehicleType: 'Shuttle',
     type: 'STANDARD'
   },
+  // Special Events
   {
     id: 'E-501',
     name: 'Science Center Field Trip',
@@ -179,6 +181,8 @@ export const RECOMMENDED_HARDWARE: DeviceGuide[] = [
   }
 ];
 
+// --- Super Admin Mock Data ---
+
 export const MOCK_TENANTS: Tenant[] = [
   { id: 'T-001', name: 'Tucson Unified (TUSD)', contactEmail: 'transport@tusd1.org', status: 'ACTIVE', studentCount: 39000, busCount: 240, joinedDate: '2023-08-15', databaseSchema: 'schema_tusd_prod' },
   { id: 'T-002', name: 'Mesa Public Schools', contactEmail: 'admin@mpsaz.org', status: 'ACTIVE', studentCount: 64000, busCount: 415, joinedDate: '2024-01-10', databaseSchema: 'schema_mesa_prod' },
@@ -207,14 +211,17 @@ export const INITIAL_PRICING_CONFIG: PricingConfig = {
 };
 
 export const INITIAL_BUDGET_DATA: BudgetEntry[] = [
+  // 2023 Data
   { id: 'b1', category: 'Fuel/Gas', amount: 450000, fiscalYear: 2023, date: '2023-12-31', description: 'Annual Diesel & Unleaded' },
   { id: 'b2', category: 'Staff Salaries', amount: 1200000, fiscalYear: 2023, date: '2023-12-31', description: 'Drivers & Mechanics' },
   { id: 'b3', category: 'Maintenance', amount: 180000, fiscalYear: 2023, date: '2023-12-31', description: 'Parts & Labor' },
   { id: 'b4', category: 'Leases/Purchases', amount: 300000, fiscalYear: 2023, date: '2023-12-31', description: 'Fleet Lease Payments' },
   { id: 'b5', category: 'Technology', amount: 25000, fiscalYear: 2023, date: '2023-12-31', description: 'Legacy GPS System' },
+
+  // 2024 Data (Showing Inflation/Increases)
   { id: 'b6', category: 'Fuel/Gas', amount: 495000, fiscalYear: 2024, date: '2024-06-01', description: 'YTD Projected' },
   { id: 'b7', category: 'Staff Salaries', amount: 1250000, fiscalYear: 2024, date: '2024-06-01', description: 'YTD Projected' },
   { id: 'b8', category: 'Maintenance', amount: 210000, fiscalYear: 2024, date: '2024-06-01', description: 'YTD Projected - Aging Fleet' },
   { id: 'b9', category: 'Leases/Purchases', amount: 300000, fiscalYear: 2024, date: '2024-06-01', description: 'Fleet Lease Payments' },
-  { id: 'b10', category: 'Technology', amount: 45000, fiscalYear: 2024, date: '2024-06-01', description: 'New Tablet Hardware' }
+  { id: 'b10', category: 'Technology', amount: 45000, fiscalYear: 2024, date: '2024-06-01', description: 'New Tablet Hardware' },
 ];
