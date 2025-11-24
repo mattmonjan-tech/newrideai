@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   LayoutDashboard, 
@@ -43,6 +44,7 @@ import DriverApp from './components/DriverApp';
 import RescueDeploy from './components/RescueDeploy';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import MaintenanceModal from './components/MaintenanceModal';
+import DriverScorecard from './components/DriverScorecard';
 
 import { INITIAL_ROUTES, INITIAL_STUDENTS, INITIAL_LOGS, MOCK_QUOTES, INITIAL_BUDGET_DATA, INITIAL_TICKETS } from './constants';
 import { BusRoute, Student, LogEntry, StudentStatus, BusStatus, SubscriptionTier, QuoteRequest, SystemSettings, MaintenanceTicket } from './types';
@@ -830,96 +832,9 @@ export default function App() {
                             </div>
                         </div>
 
-                        {/* Fleet List Side Panel */}
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                             <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                                <h3 className="font-semibold text-slate-800">Fleet Management</h3>
-                                <button 
-                                    onClick={() => setShowFleetImport(true)}
-                                    className="text-xs bg-slate-800 text-white px-2 py-1.5 rounded hover:bg-slate-700 flex items-center gap-1 transition-colors"
-                                >
-                                    <Upload size={12} /> Import CSV
-                                </button>
-                            </div>
-                            <div className="overflow-y-auto p-4 space-y-3 custom-scrollbar flex-1">
-                                {routes.map(route => (
-                                    <div key={route.id} className={`p-4 border rounded-xl transition-all group relative ${
-                                        route.alert 
-                                            ? 'border-red-200 bg-red-50 shadow-md' 
-                                            : route.status === 'Maintenance'
-                                                ? 'border-orange-200 bg-orange-50'
-                                                : 'border-slate-100 bg-white hover:border-blue-200 hover:shadow-md'
-                                    }`}>
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div>
-                                                <h4 className="font-bold text-slate-800 flex items-center gap-2">
-                                                    {route.busNumber}
-                                                    {route.alert && (
-                                                        <span className="relative flex h-3 w-3">
-                                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                                          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                                                        </span>
-                                                    )}
-                                                </h4>
-                                                <p className="text-xs text-slate-500">{route.name}</p>
-                                                {route.vehicleType && (
-                                                    <span className="text-[10px] text-slate-400 uppercase font-medium tracking-wide border border-slate-200 rounded px-1 py-0.5 mt-1 inline-block">
-                                                        {route.vehicleType}
-                                                    </span>
-                                                )}
-                                            </div>
-                                             <span className={`px-2 py-1 rounded text-xs font-bold ${
-                                                route.status === 'On Route' ? 'bg-green-100 text-green-700' :
-                                                route.status === 'Delayed' ? 'bg-red-100 text-red-700' :
-                                                route.status === 'Maintenance' ? 'bg-orange-100 text-orange-700' :
-                                                'bg-slate-100 text-slate-700'
-                                            }`}>
-                                                {route.status}
-                                            </span>
-                                        </div>
-                                        
-                                        {route.alert && (
-                                            <div className="mb-3 bg-white border border-red-100 rounded-lg p-3 shadow-sm animate-in slide-in-from-top-2">
-                                                <div className="flex items-start gap-2">
-                                                    <div className="text-red-500 mt-0.5 shrink-0">
-                                                        <AlertTriangle size={16} /> 
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-xs text-red-700 font-bold uppercase mb-1">Active Alert</p>
-                                                        <p className="text-sm text-slate-700 mb-2 leading-tight">{route.alert}</p>
-                                                        <button 
-                                                            onClick={() => handleDismissAlert(route.id)}
-                                                            className="w-full py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded transition-colors flex items-center justify-center gap-1 shadow-sm"
-                                                        >
-                                                            <Check size={12} /> Acknowledge & Dismiss
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {route.status === 'Maintenance' && (
-                                            <div className="mb-3 text-xs text-orange-700 bg-orange-100/50 p-2 rounded border border-orange-200">
-                                                See Maintenance Console for repair details.
-                                            </div>
-                                        )}
-                                        
-                                        <div className="flex items-center gap-2 text-sm text-slate-600 mb-3">
-                                            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
-                                                <User size={12} />
-                                            </div>
-                                            {route.driver}
-                                        </div>
-
-                                        <button 
-                                            onClick={() => setEditingRoute(route)}
-                                            className="w-full py-2 border border-slate-200 bg-white rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"
-                                        >
-                                            <Pencil size={14} /> Edit Details
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
+                        {/* Fleet List Side Panel - ADDING DRIVER SCORECARD HERE */}
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
+                             <DriverScorecard routes={routes} />
                         </div>
                     </div>
                 )}
