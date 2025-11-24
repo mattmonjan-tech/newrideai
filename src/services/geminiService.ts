@@ -1,8 +1,8 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { BusRoute, LogEntry, AiInsight, RouteOptimizationResponse, BudgetEntry, FinancialInsight, MaintenanceTicket } from "../types";
 
 const apiKey = process.env.API_KEY || '';
+// Using the new GoogleGenAI class as per guidelines
 const ai = new GoogleGenAI({ apiKey });
 
 export const analyzeLogistics = async (routes: BusRoute[], logs: LogEntry[], tickets: MaintenanceTicket[] = []): Promise<AiInsight[]> => {
@@ -15,7 +15,7 @@ export const analyzeLogistics = async (routes: BusRoute[], logs: LogEntry[], tic
         type: "system",
         confidence: 0
       }
-    ] as any;
+    ] as any; // Fallback
   }
 
   try {
