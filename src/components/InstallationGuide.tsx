@@ -171,6 +171,16 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
                              </div>
                         </div>
                     </div>
+
+                    <div className="bg-blue-50 border border-blue-100 p-6 rounded-xl">
+                        <h3 className="font-bold text-blue-800 mb-2 flex items-center gap-2"><Wifi size={20}/> Provisioning</h3>
+                        <p className="text-sm text-blue-700 mb-4">
+                            Once installed, navigate to <strong>Super Admin &gt; Infrastructure &gt; Telematics</strong> and enter the Serial Number (ESN) found on the device to link it to the specific bus number.
+                        </p>
+                        <div className="bg-white p-3 rounded border border-blue-200 font-mono text-sm text-slate-600">
+                            Example SN: G9-1234-5678-9012
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -217,6 +227,38 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
                     </div>
                 </div>
             )}
+
+             {/* ---------------- CLOUD GUIDE ---------------- */}
+             {(activeTab === 'CLOUD' || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
+                <div className="space-y-8 pt-8 border-t border-slate-200 print:border-0 print:pt-0 print:mt-8">
+                    <div className="border-b border-slate-100 pb-6">
+                        <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-3">
+                            <span className="bg-purple-100 text-purple-700 w-8 h-8 rounded-full flex items-center justify-center text-sm">C</span>
+                            IT & Cloud Configuration
+                        </h2>
+                        <p className="text-slate-600">
+                            Technical requirements for the Network Administrator.
+                        </p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                            <div>
+                                <p className="font-bold text-slate-800">Firewall Whitelist</p>
+                                <p className="text-sm text-slate-500">Allow outbound traffic on ports 80/443 and 8883 (MQTT).</p>
+                            </div>
+                            <code className="bg-slate-100 px-3 py-1 rounded text-sm font-mono">*.ridesmart.ai</code>
+                        </div>
+                         <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
+                            <div>
+                                <p className="font-bold text-slate-800">MDM Configuration</p>
+                                <p className="text-sm text-slate-500">Push App Configuration Key for auto-login.</p>
+                            </div>
+                            <code className="bg-slate-100 px-3 py-1 rounded text-sm font-mono">dist_id=TUSD_882</code>
+                        </div>
+                    </div>
+                </div>
+             )}
 
              {/* ---------------- GOING LIVE GUIDE ---------------- */}
              {activeTab === 'LIVE' && (
