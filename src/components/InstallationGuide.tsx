@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { X, Printer, Zap, Tablet, Server, CheckCircle2, AlertTriangle, Wifi, Smartphone, Cable, ShieldCheck, Code, Globe, Download, Loader2, Trash2 } from 'lucide-react';
+import { X, Printer, Zap, Tablet, Server, Wifi, Globe, Download, Loader2, Trash2, Code, AlertTriangle } from 'lucide-react';
 import JSZip from 'jszip';
 import saveAs from 'file-saver';
 import { getProjectFiles } from '../services/rescueExport';
@@ -195,12 +194,12 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
                             <p className="text-sm text-slate-500 mt-2">Provision an iPad (iOS 15+) or Samsung Tab A8. Install "RideSmart Driver" from the MDM store.</p>
                         </div>
                         <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center">
-                            <ShieldCheck size={48} className="mx-auto mb-4 text-slate-400" />
+                            <Code size={48} className="mx-auto mb-4 text-slate-400" />
                             <h3 className="font-bold text-slate-800">2. Physical Mount</h3>
                             <p className="text-sm text-slate-500 mt-2">Use a heavy-duty RAM Mount to secure tablet to the right of the steering wheel. Ensure power is hardwired.</p>
                         </div>
                         <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center">
-                            <Smartphone size={48} className="mx-auto mb-4 text-slate-400" />
+                            <Zap size={48} className="mx-auto mb-4 text-slate-400" />
                             <h3 className="font-bold text-slate-800">3. Kiosk Mode</h3>
                             <p className="text-sm text-slate-500 mt-2">Enable "Guided Access" (iOS) or "Pin App" (Android) to prevent drivers from exiting the application.</p>
                         </div>
@@ -218,38 +217,6 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
                     </div>
                 </div>
             )}
-
-            {/* ---------------- CLOUD GUIDE ---------------- */}
-             {(activeTab === 'CLOUD' || typeof window !== 'undefined' && window.matchMedia('print').matches) && (
-                <div className="space-y-8 pt-8 border-t border-slate-200 print:border-0 print:pt-0 print:mt-8">
-                    <div className="border-b border-slate-100 pb-6">
-                        <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-3">
-                            <span className="bg-purple-100 text-purple-700 w-8 h-8 rounded-full flex items-center justify-center text-sm">C</span>
-                            IT & Cloud Configuration
-                        </h2>
-                        <p className="text-slate-600">
-                            Technical requirements for the Network Administrator.
-                        </p>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
-                            <div>
-                                <p className="font-bold text-slate-800">Firewall Whitelist</p>
-                                <p className="text-sm text-slate-500">Allow outbound traffic on ports 80/443 and 8883 (MQTT).</p>
-                            </div>
-                            <code className="bg-slate-100 px-3 py-1 rounded text-sm font-mono">*.ridesmart.ai</code>
-                        </div>
-                         <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
-                            <div>
-                                <p className="font-bold text-slate-800">MDM Configuration</p>
-                                <p className="text-sm text-slate-500">Push App Configuration Key for auto-login.</p>
-                            </div>
-                            <code className="bg-slate-100 px-3 py-1 rounded text-sm font-mono">dist_id=TUSD_882</code>
-                        </div>
-                    </div>
-                </div>
-             )}
 
              {/* ---------------- GOING LIVE GUIDE ---------------- */}
              {activeTab === 'LIVE' && (
