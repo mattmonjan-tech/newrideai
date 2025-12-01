@@ -1,3 +1,5 @@
+
+
 import { BusRoute, BusStatus, Student, StudentStatus, LogEntry, Tenant, Invoice, QuoteRequest, PurchaseOrder, DeviceGuide, PricingConfig, BudgetEntry, MaintenanceTicket } from "./types";
 
 export const INITIAL_ROUTES: BusRoute[] = [
@@ -58,6 +60,7 @@ export const INITIAL_ROUTES: BusRoute[] = [
     vehicleType: 'Shuttle',
     type: 'STANDARD'
   },
+  // Special Events
   {
     id: 'E-501',
     name: 'Science Center Field Trip',
@@ -178,6 +181,8 @@ export const RECOMMENDED_HARDWARE: DeviceGuide[] = [
     compatibility: 'Lightning iPads'
   }
 ];
+
+// --- Super Admin Mock Data ---
 
 export const MOCK_TENANTS: Tenant[] = [
   { id: 'T-001', name: 'Tucson Unified (TUSD)', contactEmail: 'transport@tusd1.org', status: 'ACTIVE', studentCount: 39000, busCount: 240, joinedDate: '2023-08-15', databaseSchema: 'schema_tusd_prod' },
