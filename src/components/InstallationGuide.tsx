@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Printer, Zap, Tablet, Server, Wifi, Globe, Download, Loader2, Trash2, Code, AlertTriangle, Cable, ShieldCheck, Smartphone } from 'lucide-react';
+import { X, Printer, Zap, Tablet, Server, Wifi, Globe, Download, Loader2, Trash2, Code, AlertTriangle, Cable, ShieldCheck, Smartphone, Settings } from 'lucide-react';
 import JSZip from 'jszip';
 import saveAs from 'file-saver';
 import { getProjectFiles } from '../services/rescueExport';
@@ -151,7 +151,7 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
                                      <div className="w-8 h-8 bg-slate-900 text-white rounded-full flex items-center justify-center font-bold shrink-0">1</div>
                                      <div>
                                          <h4 className="font-bold text-slate-900">Locate Diagnostic Port</h4>
-                                         <p className="text-sm text-slate-600 mt-1">Usually located under the dashboard on the driver's left side, or in the kick panel.</p>
+                                         <p className="text-sm text-slate-600 mt-1">Usually located under the dashboard on the driver&apos;s left side, or in the kick panel.</p>
                                      </div>
                                  </div>
                                  <div className="flex gap-4">
@@ -204,7 +204,7 @@ const InstallationGuide: React.FC<InstallationGuideProps> = ({ onClose, initialT
                             <p className="text-sm text-slate-500 mt-2">Provision an iPad (iOS 15+) or Samsung Tab A8. Install "RideSmart Driver" from the MDM store.</p>
                         </div>
                         <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center">
-                            <Code size={48} className="mx-auto mb-4 text-slate-400" />
+                            <ShieldCheck size={48} className="mx-auto mb-4 text-slate-400" />
                             <h3 className="font-bold text-slate-800">2. Physical Mount</h3>
                             <p className="text-sm text-slate-500 mt-2">Use a heavy-duty RAM Mount to secure tablet to the right of the steering wheel. Ensure power is hardwired.</p>
                         </div>
