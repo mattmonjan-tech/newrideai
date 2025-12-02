@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bus, CheckCircle2, ArrowRight, Upload, X, FileText, Tablet, Scan, Cable, Check, Zap, Navigation, Printer, Mail, Map, Brain, DollarSign, Wrench, Lock, LayoutDashboard, User } from 'lucide-react';
+import { Bus, CheckCircle2, ArrowRight, Upload, X, FileText, Tablet, Scan, Cable, Check, Zap, Navigation, Printer, Mail, Map, Brain, DollarSign, Wrench, Lock, LayoutDashboard, User, AlertCircle } from 'lucide-react';
 import { RECOMMENDED_HARDWARE } from '../constants';
 import { SubscriptionTier, QuoteRequest } from '../types';
 
@@ -8,7 +8,7 @@ interface LandingPageProps {
   onQuoteRequest?: (quote: QuoteRequest) => void;
 }
 
-// Interactive Demo Component
+// Interactive Demo Component to prevent overlap and add life to the landing page
 const InteractiveHeroDemo = () => {
   const [progress, setProgress] = useState(65);
   const [eta, setEta] = useState(5);
@@ -168,7 +168,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
       email: '',
       students: '',
       buses: '',
-      legacyBuses: '', // New field for Retrofit calculation
+      legacyBuses: '',
       tier: 'PROFESSIONAL' as SubscriptionTier
   });
   const [generatedQuote, setGeneratedQuote] = useState<QuoteRequest | null>(null);
@@ -269,27 +269,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
 
     const printWindow = window.open('', '_blank', 'width=800,height=900');
     if (printWindow) {
-        printWindow.document.write(`
-            <html>
-                <head>
-                    <title>RideSmart Quote #${generatedQuote?.id}</title>
-                    <script src="https://cdn.tailwindcss.com"></script>
-                    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-                    <style>
-                        body { font-family: 'Poppins', sans-serif; padding: 40px; -webkit-print-color-adjust: exact; }
-                    </style>
-                </head>
-                <body>
-                    ${printContent.innerHTML}
-                    <script>
-                        setTimeout(() => {
-                            window.print();
-                            window.close();
-                        }, 500);
-                    </script>
-                </body>
-            </html>
-        `);
+        printWindow.document.write(`<html><head><title>RideSmart Quote #${generatedQuote?.id}</title><script src="https://cdn.tailwindcss.com"></script></head><body>${printContent.innerHTML}<script>setTimeout(() => { window.print(); window.close(); }, 500);</script></body></html>`);
         printWindow.document.close();
     }
   };
@@ -298,7 +278,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
       if (!generatedQuote) return;
       const subject = `RideSmart Quote #${generatedQuote.id} for ${generatedQuote.districtName}`;
       const body = `Hello ${generatedQuote.contactName},\n\nHere is the generated pricing estimate for ${generatedQuote.districtName}.\n\nPlan: ${generatedQuote.tier}\nFleet Size: ${generatedQuote.busCount}\nTotal Proposal Value: $${generatedQuote.amount.toLocaleString()}\n\nPlease review the details attached or visiting our portal.\n\nBest regards,\nRideSmart AI Team`;
-      
       const mailtoUrl = `mailto:${quoteForm.email}?bcc=matt.monjan@infusedu.com&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       window.open(mailtoUrl, '_blank');
   };
@@ -328,6 +307,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
             <div className="flex-1">
               <p className="font-bold text-sm text-white">Quote Generated Successfully</p>
               <p className="text-xs text-slate-400 mt-1">Ready to send to: {quoteForm.email}</p>
+              <p className="text-xs text-slate-400 mt-0.5">BCC: matt.monjan@infusedu.com</p>
               <button 
                 onClick={() => setShowEmailPreview(true)}
                 className="text-[10px] font-bold text-blue-300 hover:text-blue-200 underline mt-2"
@@ -553,6 +533,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
       {showEmailPreview && generatedQuote && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
               <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-300">
+                  {/* Mock Email Window Header */}
                   <div className="bg-slate-100 border-b border-slate-300 p-3 flex items-center justify-between">
                       <div className="flex gap-2">
                           <div className="w-3 h-3 rounded-full bg-red-400"></div>
@@ -565,6 +546,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
                       </button>
                   </div>
                   
+                  {/* Mock Email Body */}
                   <div className="p-8 bg-white">
                       <div className="border-b border-slate-100 pb-6 mb-6">
                           <h2 className="text-xl font-bold text-slate-900 mb-2">New Quote Request: {generatedQuote.districtName}</h2>
