@@ -130,9 +130,9 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ onImpersonate
   const activeTenants = MOCK_TENANTS.filter(t => t.status === 'ACTIVE').length;
   const totalStudents = MOCK_TENANTS.reduce((acc, t) => acc + t.studentCount, 0);
   
-  // Explicitly ensure we have tenants to show
+  // Fallback if MOCK_TENANTS is empty for some reason
   const tenantsList = MOCK_TENANTS.length > 0 ? MOCK_TENANTS : [
-    { id: 'T-001', name: 'Tucson Unified (TUSD)', contactEmail: 'transport@tusd1.org', status: 'ACTIVE', studentCount: 39000, busCount: 240, joinedDate: '2023-08-15', databaseSchema: 'schema_tusd_prod' }
+      { id: 'T-001', name: 'Tucson Unified (TUSD)', contactEmail: 'transport@tusd1.org', status: 'ACTIVE', studentCount: 39000, busCount: 240, joinedDate: '2023-08-15', databaseSchema: 'schema_tusd_prod' }
   ];
 
   if (showReportGenerator) {
@@ -199,7 +199,7 @@ const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ onImpersonate
                 </div>
             )}
 
-            {/* ... Rest of the component ... */}
+            {/* ... Rest of logic ... */}
         </div>
       </main>
     </div>
