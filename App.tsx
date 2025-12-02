@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   LayoutDashboard, Map as MapIcon, Users, Bell, Settings, Bus, LogOut, Search, ChevronRight, Pencil, User, GitMerge, AlertTriangle, Check, Cable, Upload, X, Shield, Calendar, Lock, DollarSign, Wrench, Tag 
 } from 'lucide-react';
 import DashboardMetrics from './components/DashboardMetrics';
-import SimulatedMap from './components/SimulatedMap';
+import LiveMap from './components/LiveMap'; // UPDATED
+import LiveSearch from './components/LiveSearch'; // UPDATED
 import AiLogistics from './components/AiLogistics';
 import StudentDetailsModal from './components/StudentDetailsModal';
 import EditRouteModal from './components/EditRouteModal';
@@ -31,7 +33,7 @@ import { initSupabase } from './services/supabaseService';
 const RfidLogList: React.FC<{ logs: LogEntry[] }> = ({ logs }) => (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-            <h3 className="font-semibold text-slate-800">Live RFID & System Events</h3>
+            <h3 className="font-semibold text-slate-800">Live RFID Events</h3>
             <span className="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Live Stream</span>
         </div>
         <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
@@ -44,7 +46,6 @@ const RfidLogList: React.FC<{ logs: LogEntry[] }> = ({ logs }) => (
                     <div>
                         <p className={`text-sm ${log.severity === 'critical' ? 'text-red-700 font-bold' : 'text-slate-800'}`}>
                             {log.type === 'WRONG_BUS' && <span className="uppercase mr-1">[Safety Alert]</span>}
-                            {log.type === 'ALERT' && <span className="uppercase mr-1 text-orange-600">[Driver Alert]</span>}
                             {log.message}
                         </p>
                         <p className="text-xs text-slate-500 mt-1 font-mono">{log.timestamp}</p>
@@ -60,8 +61,9 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<'CLIENT' | 'ADMIN' | 'DRIVER' | 'MAINTENANCE'>('CLIENT');
   const [tier, setTier] = useState<SubscriptionTier>('ENTERPRISE');
+  const [activeTenantId, setActiveTenantId] = useState<string | null>(null);
 
-  // Super Admin State (Lifted up with Persistence)
+  // Super Admin State
   const [adminQuotes, setAdminQuotes] = useState<QuoteRequest[]>(() => {
       const saved = localStorage.getItem('rideSmartQuotes');
       return saved ? JSON.parse(saved) : MOCK_QUOTES;
@@ -73,7 +75,7 @@ export default function App() {
       return saved ? JSON.parse(saved) : { mapProvider: 'SIMULATED' };
   });
 
-  // Initialize Supabase on load if settings exist, and whenever settings change
+  // Initialize Supabase
   useEffect(() => {
       if (systemSettings.supabaseUrl && systemSettings.supabaseKey) {
           initSupabase(systemSettings.supabaseUrl, systemSettings.supabaseKey);
@@ -85,13 +87,8 @@ export default function App() {
       return []; 
   });
 
-  useEffect(() => {
-      localStorage.setItem('rideSmartQuotes', JSON.stringify(adminQuotes));
-  }, [adminQuotes]);
-
-  useEffect(() => {
-      localStorage.setItem('rideSmartSettings', JSON.stringify(systemSettings));
-  }, [systemSettings]);
+  useEffect(() => { localStorage.setItem('rideSmartQuotes', JSON.stringify(adminQuotes)); }, [adminQuotes]);
+  useEffect(() => { localStorage.setItem('rideSmartSettings', JSON.stringify(systemSettings)); }, [systemSettings]);
 
   const [activeTab, setActiveTab] = useState<'dashboard' | 'fleet' | 'students' | 'optimizer' | 'hardware' | 'parent' | 'events' | 'budget' | 'maintenance'>('dashboard');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -99,10 +96,7 @@ export default function App() {
   const [showFleetImport, setShowFleetImport] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   
-  // Search & Notification State
-  const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
-  const [searchResults, setSearchResults] = useState<{ students: Student[], routes: BusRoute[] }>({ students: [], routes: [] });
 
   // Mock State
   const [routes, setRoutes] = useState<BusRoute[]>(INITIAL_ROUTES);
@@ -110,11 +104,8 @@ export default function App() {
   const [logs, setLogs] = useState<LogEntry[]>(INITIAL_LOGS);
   const [maintenanceTickets, setMaintenanceTickets] = useState<MaintenanceTicket[]>(INITIAL_TICKETS);
 
-  // Refs for click-outside handling
-  const searchRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
 
-  // Feature Flags based on Provisioned Tier
   const features = {
     aiLogistics: tier === 'ENTERPRISE',
     optimizer: tier === 'ENTERPRISE',
@@ -130,37 +121,18 @@ export default function App() {
       setTier(simulatedTier);
       setIsLoggedIn(true);
       setActiveTab('dashboard');
+      if (role !== 'ADMIN') {
+          setActiveTenantId('TUSD-882'); 
+      }
   };
 
   const handleNewQuote = (newQuote: QuoteRequest) => {
       setAdminQuotes(prev => [newQuote, ...prev]);
   };
 
-  // Effects
-  useEffect(() => {
-    if (searchQuery.trim().length < 2) {
-        setSearchResults({ students: [], routes: [] });
-        return;
-    }
-    const lowerQuery = searchQuery.toLowerCase();
-    const matchedStudents = students.filter(s => 
-        s.name.toLowerCase().includes(lowerQuery) || 
-        s.id.toLowerCase().includes(lowerQuery) ||
-        s.school.toLowerCase().includes(lowerQuery)
-    ).slice(0, 5);
-    const matchedRoutes = routes.filter(r => 
-        r.name.toLowerCase().includes(lowerQuery) || 
-        r.busNumber.toLowerCase().includes(lowerQuery) || 
-        r.driver.toLowerCase().includes(lowerQuery)
-    ).slice(0, 5);
-    setSearchResults({ students: matchedStudents, routes: matchedRoutes });
-  }, [searchQuery, students, routes]);
-
+  // Notification click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setSearchQuery(''); 
-      }
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
         setShowNotifications(false);
       }
@@ -173,7 +145,7 @@ export default function App() {
   useEffect(() => {
     const interval = setInterval(() => {
       setRoutes(currentRoutes => currentRoutes.map(bus => {
-        if (bus.status === BusStatus.MAINTENANCE) return bus; // Don't move buses in maintenance
+        if (bus.status === BusStatus.MAINTENANCE) return bus; 
 
         let newCoords = bus.coordinates;
         if (bus.status === BusStatus.ON_ROUTE || bus.status === BusStatus.DELAYED) {
@@ -272,9 +244,7 @@ export default function App() {
           notes: []
       };
       setMaintenanceTickets(prev => [newTicket, ...prev]);
-      
       setRoutes(prev => prev.map(r => r.id === busId ? { ...r, status: BusStatus.MAINTENANCE, alert: undefined } : r));
-      
       setLogs(prev => [{
           id: `L-MAINT-${Date.now()}`,
           timestamp: new Date().toLocaleTimeString(),
@@ -290,7 +260,6 @@ export default function App() {
 
   const handleResolveTicket = (ticketId: string, busId: string) => {
       setRoutes(prev => prev.map(r => r.id === busId ? { ...r, status: BusStatus.IDLE } : r));
-      
       setLogs(prev => [{
           id: `L-RESOLVE-${Date.now()}`,
           timestamp: new Date().toLocaleTimeString(),
@@ -319,6 +288,7 @@ export default function App() {
 
   const handleImpersonate = (tenantId: string) => {
       setUserRole('CLIENT');
+      setActiveTenantId(tenantId);
       setActiveTab('dashboard');
   };
   
@@ -329,17 +299,13 @@ export default function App() {
       }
   };
 
-  // CONNECT DRIVER APP TO ADMIN DASHBOARD LOGS
   const handleUpdateDriverStatus = (busId: string, status: BusStatus, alertMsg?: string) => {
-      // 1. Update Fleet State
       setRoutes(prev => prev.map(r => {
           if (r.id === busId) {
-              return { ...r, status, alert: alertMsg };
+              return { ...r, status, alert: typeof alertMsg === 'string' ? alertMsg : undefined };
           }
           return r;
       }));
-
-      // 2. Generate Dispatch Log for Admin View
       const route = routes.find(r => r.id === busId);
       if (route) {
           const newLog: LogEntry = {
@@ -349,7 +315,7 @@ export default function App() {
               message: alertMsg ? `Bus ${route.busNumber} Alert: ${alertMsg}` : `Bus ${route.busNumber} status updated to ${status}`,
               severity: alertMsg ? (alertMsg.includes('EMERGENCY') ? 'critical' : 'warning') : 'info'
           };
-          setLogs(prev => [newLog, ...prev].slice(0, 50)); 
+          setLogs(prev => [newLog, ...prev].slice(0, 50));
       }
   };
 
@@ -394,158 +360,34 @@ export default function App() {
                         />
                    </div>
                </div>
-               {showFleetImport && (
-                  <FleetImportModal 
-                    onImport={handleFleetImport}
-                    onClose={() => setShowFleetImport(false)}
-                  />
-                )}
-                {showMaintenanceModal && (
-                    <MaintenanceModal 
-                        isOpen={showMaintenanceModal}
-                        onClose={() => setShowMaintenanceModal(false)}
-                        onSubmit={(ticket) => setMaintenanceTickets(prev => [ticket, ...prev])}
-                        routes={routes}
-                    />
-                )}
+               {showFleetImport && <FleetImportModal onImport={handleFleetImport} onClose={() => setShowFleetImport(false)} />}
+               {showMaintenanceModal && <MaintenanceModal isOpen={showMaintenanceModal} onClose={() => setShowMaintenanceModal(false)} onSubmit={(t) => setMaintenanceTickets(prev => [t, ...prev])} routes={routes}/>}
           </div>
       );
   }
 
   return (
     <div className="flex h-screen bg-slate-100 text-slate-900 font-sans animate-in fade-in duration-300">
-      {/* Sidebar */}
       <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0 transition-all duration-300">
         <div className="p-6 flex items-center gap-3 border-b border-slate-800">
-          <div className="bg-yellow-500 p-2 rounded-lg text-slate-900">
-            <Bus size={24} />
-          </div>
-          <div>
-            <h1 className="font-bold text-white leading-tight">TUSD<br/><span className="text-yellow-500 font-normal">RideSmart</span></h1>
-          </div>
+          <div className="bg-yellow-500 p-2 rounded-lg text-slate-900"><Bus size={24} /></div>
+          <div><h1 className="font-bold text-white leading-tight">TUSD<br/><span className="text-yellow-500 font-normal">RideSmart</span></h1></div>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
-          <button 
-            onClick={() => setActiveTab('dashboard')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'hover:bg-slate-800'}`}
-          >
-            <LayoutDashboard size={20} />
-            <span className="font-medium">Dashboard</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('fleet')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'fleet' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}
-          >
-            <MapIcon size={20} />
-            <span className="font-medium">Fleet Map</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('students')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'students' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}
-          >
-            <Users size={20} />
-            <span className="font-medium">Students</span>
-          </button>
+          <button onClick={() => setActiveTab('dashboard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'dashboard' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'hover:bg-slate-800'}`}><LayoutDashboard size={20} /><span className="font-medium">Dashboard</span></button>
+          <button onClick={() => setActiveTab('fleet')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'fleet' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}><MapIcon size={20} /><span className="font-medium">Fleet Map</span></button>
+          <button onClick={() => setActiveTab('students')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'students' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}><Users size={20} /><span className="font-medium">Students</span></button>
           
-          {features.events ? (
-            <button 
-                onClick={() => setActiveTab('events')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'events' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}
-            >
-                <Calendar size={20} />
-                <span className="font-medium">Special Events</span>
-            </button>
-          ) : (
-            <div className="px-4 py-2 text-slate-600 flex items-center gap-3 opacity-50 cursor-not-allowed" title="Upgrade to The Best Bus Plan">
-                <Calendar size={20} />
-                <span className="font-medium">Special Events</span>
-                <Lock size={12} className="ml-auto" />
-            </div>
-          )}
-
-          {features.optimizer ? (
-            <button 
-                onClick={() => setActiveTab('optimizer')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'optimizer' ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/20' : 'hover:bg-slate-800'}`}
-            >
-                <GitMerge size={20} />
-                <span className="font-medium">Route Optimizer</span>
-            </button>
-          ) : (
-             <div className="px-4 py-2 text-slate-600 flex items-center gap-3 opacity-50 cursor-not-allowed" title="Upgrade to The Best Bus Plan">
-                <GitMerge size={20} />
-                <span className="font-medium">Optimizer</span>
-                <Lock size={12} className="ml-auto" />
-            </div>
-          )}
+          {features.events ? <button onClick={() => setActiveTab('events')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'events' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}><Calendar size={20} /><span className="font-medium">Special Events</span></button> : <div className="px-4 py-2 text-slate-600 flex items-center gap-3 opacity-50 cursor-not-allowed"><Calendar size={20} /><span className="font-medium">Special Events</span><Lock size={12} className="ml-auto" /></div>}
+          {features.optimizer ? <button onClick={() => setActiveTab('optimizer')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'optimizer' ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/20' : 'hover:bg-slate-800'}`}><GitMerge size={20} /><span className="font-medium">Route Optimizer</span></button> : <div className="px-4 py-2 text-slate-600 flex items-center gap-3 opacity-50 cursor-not-allowed"><GitMerge size={20} /><span className="font-medium">Optimizer</span><Lock size={12} className="ml-auto" /></div>}
 
           <div className="pt-4 mt-4 border-t border-slate-800">
              <p className="text-xs text-slate-500 uppercase tracking-wider mb-2 px-4">Administration</p>
-             
-             {features.maintenance ? (
-                <button 
-                    onClick={() => setActiveTab('maintenance')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'maintenance' ? 'bg-orange-600 text-white' : 'hover:bg-slate-800'}`}
-                >
-                    <Wrench size={20} />
-                    <span className="font-medium">Maintenance</span>
-                </button>
-             ) : (
-                <div className="px-4 py-2 text-slate-600 flex items-center gap-3 opacity-50 cursor-not-allowed" title="Upgrade to The Better Bus Plan">
-                    <Wrench size={20} />
-                    <span className="font-medium">Maintenance</span>
-                    <Lock size={12} className="ml-auto" />
-                </div>
-             )}
-
-             {features.budget ? (
-                <button 
-                    onClick={() => setActiveTab('budget')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'budget' ? 'bg-green-600 text-white' : 'hover:bg-slate-800'}`}
-                >
-                    <DollarSign size={20} />
-                    <span className="font-medium">Budget & Finance</span>
-                </button>
-             ) : (
-                <div className="px-4 py-2 text-slate-600 flex items-center gap-3 opacity-50 cursor-not-allowed" title="Upgrade to The Best Bus Plan">
-                    <DollarSign size={20} />
-                    <span className="font-medium">Budget & Finance</span>
-                    <Lock size={12} className="ml-auto" />
-                </div>
-             )}
-
-             {features.hardware ? (
-                <button 
-                    onClick={() => setActiveTab('hardware')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'hardware' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}
-                >
-                    <Cable size={20} />
-                    <span className="font-medium">District Settings</span>
-                </button>
-             ) : (
-                <div className="px-4 py-2 text-slate-600 flex items-center gap-3 opacity-50 cursor-not-allowed" title="Upgrade to The Better Bus Plan">
-                    <Cable size={20} />
-                    <span className="font-medium">District Settings</span>
-                    <Lock size={12} className="ml-auto" />
-                </div>
-             )}
-
-            {features.parentPortal ? (
-                <button 
-                    onClick={() => setActiveTab('parent')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'parent' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}
-                >
-                    <Shield size={20} />
-                    <span className="font-medium">Parent Portal</span>
-                </button>
-             ) : (
-                <div className="px-4 py-2 text-slate-600 flex items-center gap-3 opacity-50 cursor-not-allowed" title="Upgrade to The Better Bus Plan">
-                    <Shield size={20} />
-                    <span className="font-medium">Parent Portal</span>
-                    <Lock size={12} className="ml-auto" />
-                </div>
-             )}
+             {features.maintenance ? <button onClick={() => setActiveTab('maintenance')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'maintenance' ? 'bg-orange-600 text-white' : 'hover:bg-slate-800'}`}><Wrench size={20} /><span className="font-medium">Maintenance</span></button> : <div className="px-4 py-2 text-slate-600 flex items-center gap-3 opacity-50 cursor-not-allowed"><Wrench size={20} /><span className="font-medium">Maintenance</span><Lock size={12} className="ml-auto" /></div>}
+             {features.budget ? <button onClick={() => setActiveTab('budget')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'budget' ? 'bg-green-600 text-white' : 'hover:bg-slate-800'}`}><DollarSign size={20} /><span className="font-medium">Budget & Finance</span></button> : <div className="px-4 py-2 text-slate-600 flex items-center gap-3 opacity-50 cursor-not-allowed"><DollarSign size={20} /><span className="font-medium">Budget & Finance</span><Lock size={12} className="ml-auto" /></div>}
+             {features.hardware ? <button onClick={() => setActiveTab('hardware')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'hardware' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}><Cable size={20} /><span className="font-medium">District Settings</span></button> : <div className="px-4 py-2 text-slate-600 flex items-center gap-3 opacity-50 cursor-not-allowed"><Cable size={20} /><span className="font-medium">District Settings</span><Lock size={12} className="ml-auto" /></div>}
+            {features.parentPortal ? <button onClick={() => setActiveTab('parent')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'parent' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800'}`}><Shield size={20} /><span className="font-medium">Parent Portal</span></button> : <div className="px-4 py-2 text-slate-600 flex items-center gap-3 opacity-50 cursor-not-allowed"><Shield size={20} /><span className="font-medium">Parent Portal</span><Lock size={12} className="ml-auto" /></div>}
           </div>
         </nav>
 
@@ -553,32 +395,17 @@ export default function App() {
             <div className="bg-slate-800 rounded-lg p-3">
                 <p className="text-xs text-slate-400 uppercase font-bold mb-1">Active Plan</p>
                 <div className="flex items-center justify-between">
-                    <span className={`text-xs font-bold ${
-                        tier === 'ENTERPRISE' ? 'text-purple-400' :
-                        tier === 'PROFESSIONAL' ? 'text-blue-400' : 'text-yellow-400'
-                    }`}>
-                        {tier === 'ENTERPRISE' ? 'The Best Bus' :
-                         tier === 'PROFESSIONAL' ? 'The Better Bus' : 'The Basic Bus'}
+                    <span className={`text-xs font-bold ${tier === 'ENTERPRISE' ? 'text-purple-400' : tier === 'PROFESSIONAL' ? 'text-blue-400' : 'text-yellow-400'}`}>
+                        {tier === 'ENTERPRISE' ? 'The Best Bus' : tier === 'PROFESSIONAL' ? 'The Better Bus' : 'The Basic Bus'}
                     </span>
-                    {tier !== 'ENTERPRISE' && (
-                        <span className="text-[10px] underline cursor-pointer text-slate-400 hover:text-white">Upgrade</span>
-                    )}
+                    {tier !== 'ENTERPRISE' && <span className="text-[10px] underline cursor-pointer text-slate-400 hover:text-white">Upgrade</span>}
                 </div>
             </div>
         </div>
 
         <div className="p-4 space-y-2">
-           <button className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-800 text-sm">
-            <Settings size={18} />
-            <span>Settings</span>
-          </button>
-           <button 
-            onClick={() => setIsLoggedIn(false)}
-            className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-800 text-sm text-red-400 hover:text-red-300"
-           >
-            <LogOut size={18} />
-            <span>Sign Out</span>
-          </button>
+           <button className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-800 text-sm"><Settings size={18} /><span>Settings</span></button>
+           <button onClick={() => setIsLoggedIn(false)} className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-800 text-sm text-red-400 hover:text-red-300"><LogOut size={18} /><span>Sign Out</span></button>
         </div>
       </aside>
 
@@ -599,82 +426,20 @@ export default function App() {
             </div>
             
             <div className="flex items-center gap-4">
-                <div className="relative hidden md:block" ref={searchRef}>
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input 
-                        type="text" 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search bus, student, or route..." 
-                        className="pl-9 pr-4 py-2 bg-slate-100 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-full text-sm w-64 transition-all outline-none border"
-                    />
-                    {searchQuery.trim().length >= 2 && (
-                         <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in slide-in-from-top-2 z-50">
-                            {searchResults.students.length === 0 && searchResults.routes.length === 0 ? (
-                                <div className="p-4 text-center text-slate-500 text-sm">No matches found.</div>
-                            ) : (
-                                <div>
-                                    {searchResults.students.length > 0 && (
-                                        <div>
-                                            <div className="px-4 py-2 bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">Students</div>
-                                            {searchResults.students.map(s => (
-                                                <div 
-                                                    key={s.id}
-                                                    onClick={() => {
-                                                        setActiveTab('students');
-                                                        setSelectedStudent(s);
-                                                        setSearchQuery('');
-                                                    }}
-                                                    className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-0 flex items-center gap-3"
-                                                >
-                                                    <div className="bg-blue-100 text-blue-600 p-2 rounded-full"><User size={14}/></div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-slate-800">{s.name}</p>
-                                                        <p className="text-xs text-slate-400">{s.school}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {searchResults.routes.length > 0 && (
-                                        <div>
-                                            <div className="px-4 py-2 bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">Routes</div>
-                                            {searchResults.routes.map(r => (
-                                                <div 
-                                                    key={r.id}
-                                                    onClick={() => {
-                                                        setActiveTab('fleet');
-                                                        setEditingRoute(r);
-                                                        setSearchQuery('');
-                                                    }}
-                                                    className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-0 flex items-center gap-3"
-                                                >
-                                                    <div className="bg-orange-100 text-orange-600 p-2 rounded-full"><Bus size={14}/></div>
-                                                    <div>
-                                                        <p className="text-sm font-bold text-slate-800">{r.busNumber} - {r.name}</p>
-                                                        <p className="text-xs text-slate-400">{r.driver}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                         </div>
-                    )}
-                </div>
+                {/* LIVE SEARCH */}
+                <LiveSearch 
+                    students={students} 
+                    routes={routes}
+                    onSelectStudent={(s) => { setActiveTab('students'); setSelectedStudent(s); }}
+                    onSelectRoute={(r) => { setActiveTab('fleet'); setEditingRoute(r); }}
+                />
 
+                {/* Notification Bell */}
                 <div className="relative" ref={notificationRef}>
-                    <button 
-                        onClick={() => setShowNotifications(!showNotifications)}
-                        className={`relative p-2 rounded-full transition-colors ${showNotifications ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-100'}`}
-                    >
+                    <button onClick={() => setShowNotifications(!showNotifications)} className={`relative p-2 rounded-full transition-colors ${showNotifications ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-100'}`}>
                         <Bell size={20} />
-                        {logs.filter(l => l.severity !== 'info').length > 0 && (
-                            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
-                        )}
+                        {logs.filter(l => l.severity !== 'info').length > 0 && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>}
                     </button>
-                    
                     {showNotifications && (
                         <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in slide-in-from-top-2">
                             <div className="p-3 border-b border-slate-100 flex justify-between items-center bg-slate-50">
@@ -687,20 +452,13 @@ export default function App() {
                                 ) : (
                                     logs.filter(l => l.severity !== 'info').map(log => (
                                         <div key={log.id} className="p-3 border-b border-slate-50 hover:bg-slate-50 transition-colors flex gap-3">
-                                            <div className={`mt-1 shrink-0 ${log.severity === 'critical' ? 'text-red-500' : 'text-orange-500'}`}>
-                                                <AlertTriangle size={16} />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-slate-500 mb-0.5">{log.timestamp}</p>
-                                                <p className="text-sm font-medium text-slate-800">{log.message}</p>
-                                            </div>
+                                            <div className={`mt-1 shrink-0 ${log.severity === 'critical' ? 'text-red-500' : 'text-orange-500'}`}><AlertTriangle size={16} /></div>
+                                            <div><p className="text-xs text-slate-500 mb-0.5">{log.timestamp}</p><p className="text-sm font-medium text-slate-800">{log.message}</p></div>
                                         </div>
                                     ))
                                 )}
                             </div>
-                             <div className="p-2 bg-slate-50 text-center">
-                                <button onClick={() => setShowNotifications(false)} className="text-xs text-slate-500 hover:text-slate-800 font-medium">Close</button>
-                            </div>
+                             <div className="p-2 bg-slate-50 text-center"><button onClick={() => setShowNotifications(false)} className="text-xs text-slate-500 hover:text-slate-800 font-medium">Close</button></div>
                         </div>
                     )}
                 </div>
@@ -710,9 +468,7 @@ export default function App() {
                         <p className="text-sm font-bold text-slate-800">TUSD Admin</p>
                         <p className="text-xs text-slate-500">Transport Director</p>
                     </div>
-                    <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-bold border-2 border-white shadow-sm">
-                        TD
-                    </div>
+                    <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-bold border-2 border-white shadow-sm">TD</div>
                 </div>
             </div>
         </header>
@@ -730,15 +486,11 @@ export default function App() {
                                         <MapIcon size={18} className="text-blue-600"/> 
                                         Live Fleet Tracking
                                     </h3>
-                                    <button 
-                                        onClick={() => setShowMaintenanceModal(true)}
-                                        className="text-xs font-bold text-slate-500 hover:text-slate-800"
-                                    >
-                                        Report Problem
-                                    </button>
+                                    <button onClick={() => setShowMaintenanceModal(true)} className="text-xs font-bold text-slate-500 hover:text-slate-800">Report Problem</button>
                                 </div>
                                 <div className="flex-1 relative rounded-lg overflow-hidden border border-slate-100">
-                                    <SimulatedMap 
+                                    {/* UPDATED: LIVE MAP */}
+                                    <LiveMap 
                                         routes={routes} 
                                         onDismissAlert={handleDismissAlert} 
                                         onReportIssue={handleReportMechanicalIssue}
@@ -746,34 +498,19 @@ export default function App() {
                                 </div>
                             </div>
                             <div className="space-y-6">
-                                {features.aiLogistics ? (
-                                    <AiLogistics routes={routes} logs={logs} tickets={maintenanceTickets} />
-                                ) : (
-                                    <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 text-center flex flex-col items-center justify-center h-64 opacity-75">
-                                        <div className="bg-slate-100 p-3 rounded-full mb-3">
-                                            <Lock size={24} className="text-slate-400" />
-                                        </div>
-                                        <h3 className="font-bold text-slate-700 mb-2">AI Logistics Disabled</h3>
-                                        <p className="text-sm text-slate-500 max-w-xs">
-                                            Advanced AI analysis is available in <strong>The Best Bus</strong> plan.
-                                        </p>
-                                        <button className="mt-4 text-xs font-bold text-blue-600 hover:underline">Upgrade Plan</button>
-                                    </div>
-                                )}
+                                {features.aiLogistics ? <AiLogistics routes={routes} logs={logs} tickets={maintenanceTickets} /> : <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 text-center flex flex-col items-center justify-center h-64 opacity-75"><div className="bg-slate-100 p-3 rounded-full mb-3"><Lock size={24} className="text-slate-400" /></div><h3 className="font-bold text-slate-700 mb-2">AI Logistics Disabled</h3><p className="text-sm text-slate-500 max-w-xs">Advanced AI analysis is available in <strong>The Best Bus</strong> plan.</p><button className="mt-4 text-xs font-bold text-blue-600 hover:underline">Upgrade Plan</button></div>}
                                 <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="font-bold text-slate-800 text-sm">Operational Efficiency</h3>
-                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">+12% YTD</span>
-                                    </div>
+                                    <div className="flex justify-between items-center mb-4"><h3 className="font-bold text-slate-800 text-sm">Operational Efficiency</h3><span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">+12% YTD</span></div>
                                     <AnalyticsDashboard routes={routes} />
                                 </div>
                                 <RfidLogList logs={logs} />
                             </div>
                         </div>
+                        <div className="mt-6"><DriverScorecard routes={routes} /></div>
                     </>
                 )}
 
-                {/* ... Fleet Tab ... */}
+                {/* Fleet Tab */}
                 {activeTab === 'fleet' && (
                     <div className="h-full grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-2 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -786,7 +523,7 @@ export default function App() {
                                  </div>
                             </div>
                             <div className="flex-1 min-h-[400px] p-4">
-                                    <SimulatedMap 
+                                    <LiveMap 
                                         routes={routes} 
                                         onDismissAlert={handleDismissAlert} 
                                         onReportIssue={handleReportMechanicalIssue}
@@ -794,11 +531,33 @@ export default function App() {
                             </div>
                         </div>
 
+                        {/* Fleet List */}
                         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                             {/* Adding the Driver Safety Scorecard Here */}
-                             <div className="h-full overflow-y-auto custom-scrollbar">
-                                <DriverScorecard routes={routes} />
-                             </div>
+                             <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                <h3 className="font-semibold text-slate-800">Fleet Management</h3>
+                                <button onClick={() => setShowFleetImport(true)} className="text-xs bg-slate-800 text-white px-2 py-1.5 rounded hover:bg-slate-700 flex items-center gap-1 transition-colors"><Upload size={12} /> Import CSV</button>
+                            </div>
+                            <div className="overflow-y-auto p-4 space-y-3 custom-scrollbar flex-1">
+                                {routes.map(route => (
+                                    <div key={route.id} className={`p-4 border rounded-xl transition-all group relative ${route.alert ? 'border-red-200 bg-red-50 shadow-md' : route.status === 'Maintenance' ? 'border-orange-200 bg-orange-50' : 'border-slate-100 bg-white hover:border-blue-200 hover:shadow-md'}`}>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                                                    {route.busNumber}
+                                                    {route.alert && <span className="relative flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>}
+                                                </h4>
+                                                <p className="text-xs text-slate-500">{route.name}</p>
+                                                {route.vehicleType && <span className="text-[10px] text-slate-400 uppercase font-medium tracking-wide border border-slate-200 rounded px-1 py-0.5 mt-1 inline-block">{route.vehicleType}</span>}
+                                            </div>
+                                             <span className={`px-2 py-1 rounded text-xs font-bold ${route.status === 'On Route' ? 'bg-green-100 text-green-700' : route.status === 'Delayed' ? 'bg-red-100 text-red-700' : route.status === 'Maintenance' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-700'}`}>{route.status}</span>
+                                        </div>
+                                        {route.alert && (<div className="mb-3 bg-white border border-red-100 rounded-lg p-3 shadow-sm animate-in slide-in-from-top-2"><div className="flex items-start gap-2"><div className="text-red-500 mt-0.5 shrink-0"><AlertTriangle size={16} /></div><div className="flex-1 min-w-0"><p className="text-xs text-red-700 font-bold uppercase mb-1">Active Alert</p><p className="text-sm text-slate-700 mb-2 leading-tight">{route.alert}</p><button onClick={() => handleDismissAlert(route.id)} className="w-full py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded transition-colors flex items-center justify-center gap-1 shadow-sm"><Check size={12} /> Acknowledge & Dismiss</button></div></div></div>)}
+                                        {route.status === 'Maintenance' && (<div className="mb-3 text-xs text-orange-700 bg-orange-100/50 p-2 rounded border border-orange-200">See Maintenance Console for repair details.</div>)}
+                                        <div className="flex items-center gap-2 text-sm text-slate-600 mb-3"><div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center"><User size={12} /></div>{route.driver}</div>
+                                        <button onClick={() => setEditingRoute(route)} className="w-full py-2 border border-slate-200 bg-white rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"><Pencil size={14} /> Edit Details</button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -807,46 +566,14 @@ export default function App() {
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
                         <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                             <h3 className="font-bold text-slate-800">Student Roster</h3>
-                            <div className="flex gap-2">
-                                <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded">
-                                    {students.filter(s => s.status === 'On Bus').length} On Bus
-                                </span>
-                                <span className="text-xs font-medium px-2 py-1 bg-slate-100 text-slate-600 rounded">
-                                    {students.length} Total
-                                </span>
-                            </div>
+                            <div className="flex gap-2"><span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded">{students.filter(s => s.status === 'On Bus').length} On Bus</span><span className="text-xs font-medium px-2 py-1 bg-slate-100 text-slate-600 rounded">{students.length} Total</span></div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {students.map(student => (
-                                    <div 
-                                        key={student.id}
-                                        onClick={() => setSelectedStudent(student)}
-                                        className="p-4 border border-slate-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all cursor-pointer bg-white group"
-                                    >
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors overflow-hidden">
-                                                {student.photoUrl ? (
-                                                    <img src={student.photoUrl} alt={student.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <User size={20} />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <h4 className="font-bold text-slate-800">{student.name}</h4>
-                                                <p className="text-xs text-slate-500">{student.school}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="text-slate-500">Grade {student.grade}</span>
-                                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                                                student.status === 'On Bus' ? 'bg-green-100 text-green-700' :
-                                                student.status === 'Absent' ? 'bg-red-100 text-red-700' :
-                                                'bg-slate-100 text-slate-600'
-                                            }`}>
-                                                {student.status}
-                                            </span>
-                                        </div>
+                                    <div key={student.id} onClick={() => setSelectedStudent(student)} className="p-4 border border-slate-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all cursor-pointer bg-white group">
+                                        <div className="flex items-center gap-3 mb-3"><div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors overflow-hidden">{student.photoUrl ? (<img src={student.photoUrl} alt={student.name} className="w-full h-full object-cover" />) : (<User size={20} />)}</div><div><h4 className="font-bold text-slate-800">{student.name}</h4><p className="text-xs text-slate-500">{student.school}</p></div></div>
+                                        <div className="flex justify-between items-center text-sm"><span className="text-slate-500">Grade {student.grade}</span><span className={`px-2 py-0.5 rounded text-xs font-bold ${student.status === 'On Bus' ? 'bg-green-100 text-green-700' : student.status === 'Absent' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}>{student.status}</span></div>
                                     </div>
                                 ))}
                              </div>
@@ -854,76 +581,22 @@ export default function App() {
                     </div>
                 )}
 
-                {activeTab === 'events' && (
-                    <SpecialEvents routes={routes} onAddEvent={handleAddEvent} />
-                )}
-
-                {activeTab === 'optimizer' && (
-                    <RouteOptimizer routes={routes} />
-                )}
-
-                {activeTab === 'hardware' && (
-                    <HardwareSetup onImportStudents={handleStudentImport} />
-                )}
-
-                {activeTab === 'parent' && (
-                    <ParentPortal 
-                        student={selectedStudent || students[0]} 
-                        routes={routes} 
-                    />
-                )}
-
-                {activeTab === 'budget' && (
-                    <BudgetPlanner initialData={INITIAL_BUDGET_DATA} />
-                )}
-
-                {activeTab === 'maintenance' && (
-                    <MaintenanceConsole 
-                        tickets={maintenanceTickets} 
-                        routes={routes} 
-                        onUpdateTicket={handleUpdateTicket}
-                        onResolveTicket={handleResolveTicket}
-                        onCreateTicket={(t) => setMaintenanceTickets(prev => [t, ...prev])}
-                        onImportFleet={() => setShowFleetImport(true)}
-                    />
-                )}
+                {/* Keep existing tabs: events, optimizer, hardware, parent, budget, maintenance */}
+                {activeTab === 'events' && <SpecialEvents routes={routes} onAddEvent={handleAddEvent} />}
+                {activeTab === 'optimizer' && <RouteOptimizer routes={routes} />}
+                {activeTab === 'hardware' && <HardwareSetup onImportStudents={handleStudentImport} />}
+                {activeTab === 'parent' && <ParentPortal student={selectedStudent || students[0]} routes={routes} />}
+                {activeTab === 'budget' && <BudgetPlanner initialData={INITIAL_BUDGET_DATA} />}
+                {activeTab === 'maintenance' && <MaintenanceConsole tickets={maintenanceTickets} routes={routes} onUpdateTicket={handleUpdateTicket} onResolveTicket={handleResolveTicket} onCreateTicket={(t) => setMaintenanceTickets(prev => [t, ...prev])} onImportFleet={() => setShowFleetImport(true)}/>}
             </div>
         </div>
       </main>
       
-      {selectedStudent && (
-          <StudentDetailsModal 
-            student={selectedStudent} 
-            routes={routes}
-            onClose={() => setSelectedStudent(null)} 
-            onUpdate={handleStudentUpdate}
-          />
-      )}
-
-      {editingRoute && (
-          <EditRouteModal 
-            route={editingRoute} 
-            onSave={handleSaveRoute} 
-            onClose={() => setEditingRoute(null)} 
-          />
-      )}
-
-      {showFleetImport && (
-          <FleetImportModal 
-            onImport={handleFleetImport}
-            onClose={() => setShowFleetImport(false)}
-          />
-      )}
-
-      {showMaintenanceModal && (
-          <MaintenanceModal 
-            isOpen={showMaintenanceModal}
-            onClose={() => setShowMaintenanceModal(false)}
-            onSubmit={(ticket) => setMaintenanceTickets(prev => [ticket, ...prev])}
-            routes={routes}
-          />
-      )}
-
+      {/* Modals */}
+      {selectedStudent && <StudentDetailsModal student={selectedStudent} routes={routes} onClose={() => setSelectedStudent(null)} onUpdate={handleStudentUpdate} />}
+      {editingRoute && <EditRouteModal route={editingRoute} onSave={handleSaveRoute} onClose={() => setEditingRoute(null)} />}
+      {showFleetImport && <FleetImportModal onImport={handleFleetImport} onClose={() => setShowFleetImport(false)} />}
+      {showMaintenanceModal && <MaintenanceModal isOpen={showMaintenanceModal} onClose={() => setShowMaintenanceModal(false)} onSubmit={(t) => setMaintenanceTickets(prev => [t, ...prev])} routes={routes} />}
     </div>
   );
 }
