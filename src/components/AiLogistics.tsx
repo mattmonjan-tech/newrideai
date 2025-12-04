@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { analyzeLogistics } from '../services/geminiService';
 import { BusRoute, LogEntry, AiInsight, MaintenanceTicket } from '../types';
@@ -30,7 +29,6 @@ const AiLogistics: React.FC<AiLogisticsProps> = ({ routes, logs, tickets = [] })
 
   return (
     <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-xl p-6 text-white shadow-xl overflow-hidden relative">
-        {/* Background decoration */}
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-blue-500 rounded-full blur-3xl opacity-20"></div>
         <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-purple-500 rounded-full blur-3xl opacity-20"></div>
 
