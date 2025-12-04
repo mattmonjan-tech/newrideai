@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bus, CheckCircle2, ArrowRight, Upload, X, FileText, Tablet, Scan, Cable, Check, Zap, Navigation, Printer, Mail, Map, Brain, DollarSign, Wrench, Lock, LayoutDashboard, User, AlertCircle, Shield } from 'lucide-react';
 import { RECOMMENDED_HARDWARE } from '../constants';
