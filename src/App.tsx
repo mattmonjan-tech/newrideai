@@ -18,13 +18,14 @@ import SpecialEvents from './components/SpecialEvents';
 import SuperAdminDashboard from './components/SuperAdminDashboard';
 import BudgetPlanner from './components/BudgetPlanner';
 import MaintenanceConsole from './components/MaintenanceConsole';
+import TelematicsIntegration from './components/TelematicsIntegration';
 import DriverApp from './components/DriverApp';
+import RescueDeploy from './components/RescueDeploy';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import MaintenanceModal from './components/MaintenanceModal';
 import DriverScorecard from './components/DriverScorecard';
-import RescueDeploy from './components/RescueDeploy';
 
-import { INITIAL_ROUTES, INITIAL_STUDENTS, INITIAL_LOGS, MOCK_QUOTES, INITIAL_TICKETS, INITIAL_BUDGET_DATA } from './constants';
+import { INITIAL_ROUTES, INITIAL_STUDENTS, INITIAL_LOGS, MOCK_QUOTES, INITIAL_BUDGET_DATA, INITIAL_TICKETS } from './constants';
 import { BusRoute, Student, LogEntry, StudentStatus, BusStatus, SubscriptionTier, QuoteRequest, SystemSettings, MaintenanceTicket } from './types';
 import { initSupabase } from './services/supabaseService';
 
@@ -81,6 +82,11 @@ export default function App() {
       }
   }, [systemSettings.supabaseUrl, systemSettings.supabaseKey]); 
 
+  // Tenants State
+  const [tenants, setTenants] = useState(() => {
+      return []; 
+  });
+
   useEffect(() => {
       localStorage.setItem('rideSmartQuotes', JSON.stringify(adminQuotes));
   }, [adminQuotes]);
@@ -95,7 +101,7 @@ export default function App() {
   const [showFleetImport, setShowFleetImport] = useState(false);
   const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   
-  // Notification State
+  // Notification State (Search moved to LiveSearch component)
   const [showNotifications, setShowNotifications] = useState(false);
   
   // Mock State
@@ -565,6 +571,7 @@ export default function App() {
             </div>
             
             <div className="flex items-center gap-4">
+                {/* UPDATED LIVE SEARCH */}
                 <LiveSearch 
                     students={students}
                     routes={routes}
@@ -652,6 +659,7 @@ export default function App() {
                                     </button>
                                 </div>
                                 <div className="flex-1 relative rounded-lg overflow-hidden border border-slate-100">
+                                    {/* UPDATED LIVE MAP */}
                                     <LiveMap 
                                         routes={routes} 
                                         onDismissAlert={handleDismissAlert} 
@@ -703,6 +711,7 @@ export default function App() {
                                  </div>
                             </div>
                             <div className="flex-1 min-h-[400px] p-4">
+                                    {/* UPDATED LIVE MAP */}
                                     <LiveMap 
                                         routes={routes} 
                                         onDismissAlert={handleDismissAlert} 
@@ -840,11 +849,11 @@ export default function App() {
                                         </div>
                                         <div className="flex justify-between items-center text-sm">
                                             <span className="text-slate-500">Grade {student.grade}</span>
-                                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                                            <span className={\`px-2 py-0.5 rounded text-xs font-bold \${
                                                 student.status === 'On Bus' ? 'bg-green-100 text-green-700' :
                                                 student.status === 'Absent' ? 'bg-red-100 text-red-700' :
                                                 'bg-slate-100 text-slate-600'
-                                            }`}>
+                                            }\`}>
                                                 {student.status}
                                             </span>
                                         </div>
@@ -892,6 +901,7 @@ export default function App() {
         </div>
       </main>
       
+      {/* Modals */}
       {selectedStudent && (
           <StudentDetailsModal 
             student={selectedStudent} 
@@ -927,4 +937,43 @@ export default function App() {
 
     </div>
   );
+}
+`;
+
+    return files;
+};--- START OF FILE package.json ---
+
+
+{
+  "name": "ridesmart-app",
+  "private": true,
+  "version": "53.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@google/genai": "*",
+    "@supabase/supabase-js": "^2.39.0",
+    "lucide-react": "^0.294.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.10.3",
+    "file-saver": "^2.0.5",
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.8",
+    "@types/file-saver": "^2.0.7",
+    "@types/node": "^20.10.0"
+  }
 }
