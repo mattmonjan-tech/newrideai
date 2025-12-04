@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BusRoute } from '../types';
 import { Trophy, AlertTriangle, Zap, Timer } from 'lucide-react';
