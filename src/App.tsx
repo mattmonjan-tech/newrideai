@@ -668,7 +668,6 @@ export default function App() {
                                 </div>
                             </div>
                             <div className="space-y-6">
-                                {/* Feature: AI Logistics (Enterprise Only) */}
                                 {features.aiLogistics ? (
                                     <AiLogistics routes={routes} logs={logs} tickets={maintenanceTickets} />
                                 ) : (
@@ -695,7 +694,6 @@ export default function App() {
                         </div>
                         
                         <div className="mt-6">
-                            {/* FIX: Remove onUpdateStatus prop */}
                             <DriverScorecard routes={routes} />
                         </div>
                     </>
@@ -903,7 +901,6 @@ export default function App() {
         </div>
       </main>
       
-      {/* Modals */}
       {selectedStudent && (
           <StudentDetailsModal 
             student={selectedStudent} 
