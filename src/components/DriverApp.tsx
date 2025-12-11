@@ -1,104 +1,149 @@
-import React from 'react';
-import { BusRoute } from '../types';
-import { Trophy, AlertTriangle, Zap, Timer } from 'lucide-react';
+import React, { useState } from 'react';
+import { BusRoute, BusStatus } from '../types';
+import { Bus, Navigation, Clock, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
 
-interface DriverScorecardProps {
+interface DriverAppProps {
   routes: BusRoute[];
+  onUpdateStatus: (busId: string, status: BusStatus, alertMsg?: string) => void;
 }
 
-const DriverScorecard: React.FC<DriverScorecardProps> = ({ routes }) => {
-  // Mock generating scores based on route ID to keep it consistent but simulated
-  const driverStats = routes.map(r => {
-    // Generate a deterministic pseudo-random score based on bus number
-    const seed = r.busNumber.charCodeAt(2) || 50; 
-    const safetyScore = Math.min(100, Math.max(65, seed + 20)); 
-    
-    return {
-      ...r,
-      score: safetyScore,
-      harshBraking: Math.floor((100 - safetyScore) / 5),
-      speedingEvents: Math.floor((100 - safetyScore) / 8),
-      idling: Math.floor((100 - safetyScore) / 2)
-    };
-  }).sort((a, b) => b.score - a.score); // Rank highest score first
+const DriverApp: React.FC<DriverAppProps> = ({ routes, onUpdateStatus }) => {
+  // Simulator: Pick a random bus to be "my" bus for this session
+  const [myBusId] = useState<string>(() => {
+    if (routes.length > 0) return routes[0].id;
+    return '';
+  });
+
+  const myBus = routes.find(r => r.id === myBusId);
+
+  if (!myBus) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-100">
+        <div className="text-center p-8 bg-white rounded-xl shadow-lg">
+          <h2 className="text-xl font-bold text-slate-800">No Bus Assigned</h2>
+          <p className="text-slate-500">Please contact dispatch.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleStatusChange = (status: BusStatus) => {
+    onUpdateStatus(myBusId, status);
+  };
+
+  const handleEmergency = () => {
+    onUpdateStatus(myBusId, BusStatus.DELAYED, "EMERGENCY: Driver needs assistance!");
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
-      <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-        <h3 className="font-bold text-slate-800 flex items-center gap-2">
-          <Trophy className="text-yellow-500" size={18} /> Driver Safety Leaderboard
-        </h3>
-        <span className="text-xs font-medium text-slate-500">Weekly Assessment</span>
-      </div>
+    <div className="h-screen bg-slate-50 flex flex-col font-sans">
+      {/* Header */}
+      <header className="bg-slate-900 text-white p-4 shadow-md shrink-0">
+        <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-2">
+                <div className="bg-yellow-500 p-1.5 rounded text-slate-900">
+                    <Bus size={20} />
+                </div>
+                <div>
+                    <h1 className="font-bold text-lg leading-none">Driver<span className="text-yellow-500">Connect</span></h1>
+                    <p className="text-[10px] text-slate-400">v71.0.0 • {myBus.busNumber}</p>
+                </div>
+            </div>
+            <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${
+                myBus.status === BusStatus.ON_ROUTE ? 'bg-green-500 text-white' :
+                myBus.status === BusStatus.DELAYED ? 'bg-red-500 text-white' :
+                'bg-slate-700 text-slate-300'
+            }`}>
+               <div className="w-2 h-2 bg-current rounded-full animate-pulse" />
+               {myBus.status}
+            </div>
+        </div>
+      </header>
 
-      <div className="flex-1 overflow-y-auto p-0 custom-scrollbar">
-        <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50 text-xs font-bold text-slate-400 uppercase sticky top-0 z-10">
-                <tr>
-                    <th className="p-3 border-b border-slate-100">Rank</th>
-                    <th className="p-3 border-b border-slate-100">Driver</th>
-                    <th className="p-3 border-b border-slate-100 text-center">Events</th>
-                    <th className="p-3 border-b border-slate-100 text-right">Score</th>
-                </tr>
-            </thead>
-            <tbody className="text-sm">
-                {driverStats.map((driver, idx) => (
-                    <tr key={driver.id} className="hover:bg-blue-50/50 transition-colors border-b border-slate-50 last:border-0">
-                        <td className="p-3">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                                idx === 0 ? 'bg-yellow-100 text-yellow-700' : 
-                                idx === 1 ? 'bg-slate-200 text-slate-700' : 
-                                idx === 2 ? 'bg-orange-100 text-orange-800' : 'text-slate-400'
-                            }`}>
-                                {idx + 1}
-                            </div>
-                        </td>
-                        <td className="p-3">
-                            <p className="font-bold text-slate-800">{driver.driver}</p>
-                            <p className="text-xs text-slate-500">{driver.busNumber}</p>
-                        </td>
-                        <td className="p-3">
-                            <div className="flex gap-2 justify-center">
-                                {driver.harshBraking > 0 && (
-                                    <span className="flex items-center text-[10px] text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-100" title="Harsh Braking">
-                                        <AlertTriangle size={10} className="mr-0.5"/> {driver.harshBraking}
-                                    </span>
-                                )}
-                                {driver.speedingEvents > 0 && (
-                                    <span className="flex items-center text-[10px] text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100" title="Speeding">
-                                        <Zap size={10} className="mr-0.5"/> {driver.speedingEvents}
-                                    </span>
-                                )}
-                            </div>
-                        </td>
-                        <td className="p-3 text-right">
-                            <div className="inline-flex flex-col items-end">
-                                <span className={`font-mono font-bold ${
-                                    driver.score >= 90 ? 'text-green-600' :
-                                    driver.score >= 80 ? 'text-blue-600' :
-                                    driver.score >= 70 ? 'text-orange-500' : 'text-red-600'
-                                }`}>
-                                    {driver.score}
-                                </span>
-                                <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">
-                                    <div 
-                                        className={`h-full rounded-full ${
-                                            driver.score >= 90 ? 'bg-green-500' :
-                                            driver.score >= 80 ? 'bg-blue-500' :
-                                            driver.score >= 70 ? 'bg-orange-500' : 'bg-red-500'
-                                        }`} 
-                                        style={{ width: `${driver.score}%` }} 
-                                    />
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-      </div>
+      {/* Main Controls */}
+      <main className="flex-1 p-4 overflow-y-auto space-y-4">
+        
+        {/* Current Stop Card */}
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+            <h3 className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-1">
+                <Navigation size={12} /> Next Stop
+            </h3>
+            <div className="flex justify-between items-start">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-800">Maple Ave & 5th St</h2>
+                    <p className="text-slate-500 text-sm">Scheduled: 7:42 AM <span className="text-green-600 font-bold ml-1">(On Time)</span></p>
+                </div>
+                <div className="bg-blue-100 text-blue-700 p-2 rounded-lg">
+                    <Clock size={24} />
+                </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+                <button className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-lg font-bold text-sm transition-colors">
+                    Skip Stop
+                </button>
+                <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold text-sm shadow-md transition-colors">
+                    Arrived
+                </button>
+            </div>
+        </div>
+
+        {/* Status Actions */}
+        <div className="grid grid-cols-2 gap-3">
+             <button 
+                onClick={() => handleStatusChange(BusStatus.ON_ROUTE)}
+                className={`p-4 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${
+                    myBus.status === BusStatus.ON_ROUTE 
+                    ? 'border-green-500 bg-green-50 text-green-700' 
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-green-200'
+                }`}
+             >
+                <CheckCircle size={24} />
+                <span className="font-bold">On Route</span>
+             </button>
+
+             <button 
+                onClick={() => handleStatusChange(BusStatus.IDLE)}
+                className={`p-4 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${
+                    myBus.status === BusStatus.IDLE 
+                    ? 'border-slate-500 bg-slate-100 text-slate-800' 
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                }`}
+             >
+                <Clock size={24} />
+                <span className="font-bold">On Break</span>
+             </button>
+        </div>
+
+        {/* Traffic / Delay Report */}
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+             <h3 className="text-xs font-bold text-slate-400 uppercase mb-3">Report Issues</h3>
+             <div className="grid grid-cols-3 gap-2">
+                <button onClick={() => onUpdateStatus(myBusId, BusStatus.DELAYED, "Heavy Traffic")} className="p-2 bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-200 rounded-lg text-xs font-medium text-slate-700 flex flex-col items-center gap-1 transition-colors">
+                    <Navigation size={16} className="text-orange-500" />
+                    Traffic
+                </button>
+                <button onClick={() => onUpdateStatus(myBusId, BusStatus.MAINTENANCE, "Mechanical Issue")} className="p-2 bg-slate-50 hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-lg text-xs font-medium text-slate-700 flex flex-col items-center gap-1 transition-colors">
+                    <Shield size={16} className="text-red-500" />
+                    Mechanical
+                </button>
+                <button onClick={() => onUpdateStatus(myBusId, BusStatus.DELAYED, "Student Incident")} className="p-2 bg-slate-50 hover:bg-yellow-50 border border-slate-200 hover:border-yellow-200 rounded-lg text-xs font-medium text-slate-700 flex flex-col items-center gap-1 transition-colors">
+                    <AlertTriangle size={16} className="text-yellow-500" />
+                    Incident
+                </button>
+             </div>
+        </div>
+
+        <button 
+            onClick={handleEmergency}
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 animate-pulse mt-auto"
+        >
+            <AlertTriangle size={24} />
+            SOS - EMERGENCY
+        </button>
+
+      </main>
     </div>
   );
 };
 
-export default DriverScorecard;
+export default DriverApp;
