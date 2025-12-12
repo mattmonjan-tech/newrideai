@@ -55,9 +55,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
         let perBusPrice = 0;
 
         switch (quoteForm.tier) {
-            case 'BASIC': basePrice = 3000; perBusPrice = 200; break;
-            case 'PROFESSIONAL': basePrice = 5000; perBusPrice = 400; break;
-            case 'ENTERPRISE': basePrice = 10000; perBusPrice = 600; break;
+            case 'BASIC': basePrice = 3000; perBusPrice = 150; break;
+            case 'PROFESSIONAL': basePrice = 5000; perBusPrice = 310; break;
+            case 'ENTERPRISE': basePrice = 10000; perBusPrice = 460; break;
         }
 
         let discountPerBus = 0;
@@ -68,9 +68,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
         else if (busCount > 100) discountPerBus = 2.50;
 
         const adjustedPerBusPrice = perBusPrice - discountPerBus;
-        const hardwareTotal = legacyCount * 172.50;
+        const hardwareTotal = legacyCount * 200; // Updated hardware kit price
         const totalAnnual = basePrice + (busCount * adjustedPerBusPrice);
-        const grandTotal = totalAnnual + hardwareTotal;
+        const grandTotal = totalAnnual + hardwareTotal + 3000; // Added one‑time setup fee
 
         setDiscountDetails({ perBus: discountPerBus, totalDiscount: busCount * discountPerBus });
         setHardwareCost(hardwareTotal);
@@ -89,6 +89,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
             tier: quoteForm.tier,
             amount: grandTotal,
             hardwareCost: hardwareTotal,
+            setupFee: 3000,
             status: 'PENDING',
             submittedDate: new Date().toLocaleDateString()
         };
@@ -349,12 +350,25 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onQuoteRequest }) =>
                                                             <p className="text-xs text-slate-500">GPS & Telematics unit for pre-2016 vehicles.</p>
                                                         </td>
                                                         <td className="py-4 text-center font-mono">{generatedQuote.legacyBusCount}</td>
-                                                        <td className="py-4 text-right font-mono">$172.50</td>
+                                                        <td className="py-4 text-right font-mono">$200</td>
                                                         <td className="py-4 text-right font-bold text-slate-800">
                                                             ${(generatedQuote.hardwareCost || 0).toLocaleString()}
                                                         </td>
                                                     </tr>
-                                                )}
+                                                )
+                                                    {generatedQuote.setupFee && generatedQuote.setupFee > 0 && (
+                                                    <tr>
+                                                        <td className="py-4">
+                                                            <p className="font-bold text-slate-800">One‑Time Setup Fee</p>
+                                                            <p className="text-xs text-slate-500">Initial configuration and onboarding.</p>
+                                                        </td>
+                                                        <td className="py-4 text-center font-mono">1</td>
+                                                        <td className="py-4 text-right font-mono">${generatedQuote.setupFee}</td>
+                                                        <td className="py-4 text-right font-bold text-slate-800">
+                                                            ${generatedQuote.setupFee.toLocaleString()}
+                                                        </td>
+                                                    </tr>
+                                                )
                                             </tbody>
                                         </table>
 

@@ -152,6 +152,7 @@ export interface QuoteRequest {
   tier: SubscriptionTier;
   amount: number;
   hardwareCost?: number;
+  setupFee?: number; // New one‑time setup fee
   status: 'PENDING' | 'REVIEWED' | 'APPROVED';
   submittedDate: string;
 }

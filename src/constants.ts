@@ -1,4 +1,4 @@
-import { BusRoute, BusStatus, Student, StudentStatus, LogEntry, Tenant, Invoice, QuoteRequest, PurchaseOrder, DeviceGuide, PricingConfig, BudgetEntry, MaintenanceTicket } from "./types";
+import { BusRoute, BusStatus, Student, StudentStatus, LogEntry, Tenant, Invoice, QuoteRequest, SubscriptionTier, PurchaseOrder, DeviceGuide, PricingConfig, BudgetEntry, MaintenanceTicket } from "./types";
 
 export const INITIAL_ROUTES: BusRoute[] = [
   {
@@ -108,32 +108,32 @@ export const INITIAL_LOGS: LogEntry[] = [
 ];
 
 export const INITIAL_TICKETS: MaintenanceTicket[] = [
-    { 
-        id: 'M-101', 
-        busId: 'R-305', 
-        busNumber: 'B-33', 
-        issue: 'Brake Line Inspection', 
-        reportedBy: 'Telematics Alert (Code P2201)',
-        reportedAt: '2024-05-18', 
-        status: 'IN_PROGRESS', 
-        priority: 'HIGH',
-        progress: 65,
-        estimatedCompletion: '4 hours',
-        notes: ['Mechanic dispatched.', 'Parts ordered.', 'Technician currently replacing rear calipers.']
-    },
-    {
-        id: 'M-102', 
-        busId: 'R-202', 
-        busNumber: 'B-09', 
-        issue: 'Intermittent AC Failure', 
-        reportedBy: 'Driver (David Chen)',
-        reportedAt: '2024-05-19', 
-        status: 'OPEN', 
-        priority: 'MEDIUM', 
-        progress: 0,
-        estimatedCompletion: '1 day',
-        notes: ['Driver reports AC stops blowing cold when idle.']
-    }
+  {
+    id: 'M-101',
+    busId: 'R-305',
+    busNumber: 'B-33',
+    issue: 'Brake Line Inspection',
+    reportedBy: 'Telematics Alert (Code P2201)',
+    reportedAt: '2024-05-18',
+    status: 'IN_PROGRESS',
+    priority: 'HIGH',
+    progress: 65,
+    estimatedCompletion: '4 hours',
+    notes: ['Mechanic dispatched.', 'Parts ordered.', 'Technician currently replacing rear calipers.']
+  },
+  {
+    id: 'M-102',
+    busId: 'R-202',
+    busNumber: 'B-09',
+    issue: 'Intermittent AC Failure',
+    reportedBy: 'Driver (David Chen)',
+    reportedAt: '2024-05-19',
+    status: 'OPEN',
+    priority: 'MEDIUM',
+    progress: 0,
+    estimatedCompletion: '1 day',
+    notes: ['Driver reports AC stops blowing cold when idle.']
+  }
 ];
 
 export const RECOMMENDED_HARDWARE: DeviceGuide[] = [
@@ -197,13 +197,38 @@ export const MOCK_QUOTES: QuoteRequest[] = [
 ];
 
 export const MOCK_POS: PurchaseOrder[] = [
-    { id: 'PO-8821', districtName: 'Chandler Unified', contactName: 'Sarah Connors', email: 's.connors@cusd.edu', fileName: 'CUSD_PO_Req_001.pdf', uploadDate: '2024-04-20', status: 'PROCESSING' },
-    { id: 'PO-8822', districtName: 'Scottsdale Unified', contactName: 'Dr. Alan Grant', email: 'agrant@susd.org', fileName: 'SUSD_PurchaseOrder_FY24.pdf', uploadDate: '2024-04-22', status: 'VERIFIED' }
+  { id: 'PO-8821', districtName: 'Chandler Unified', contactName: 'Sarah Connors', email: 's.connors@cusd.edu', fileName: 'CUSD_PO_Req_001.pdf', uploadDate: '2024-04-20', status: 'PROCESSING' },
+  { id: 'PO-8822', districtName: 'Scottsdale Unified', contactName: 'Dr. Alan Grant', email: 'agrant@susd.org', fileName: 'SUSD_PurchaseOrder_FY24.pdf', uploadDate: '2024-04-22', status: 'VERIFIED' }
 ];
 
 export const INITIAL_PRICING_CONFIG: PricingConfig = {
-    basePrice: 3000,
-    perBusPrice: 200
+  basePrice: 3000,
+  perBusPrice: 200
+};
+
+// Feature list per subscription tier (recommended additions)
+export const FEATURES_BY_TIER: Record<SubscriptionTier, string[]> = {
+  BASIC: [
+    'Live GPS tracking',
+    'RFID student ridership',
+    'Basic alerts & notifications'
+  ],
+  PROFESSIONAL: [
+    'Live GPS tracking',
+    'RFID student ridership',
+    'Parent mobile app',
+    'Automated delay notifications',
+    'Tablet kiosk mode'
+  ],
+  ENTERPRISE: [
+    'Live GPS tracking',
+    'RFID student ridership',
+    'Parent mobile app',
+    'Automated delay notifications',
+    'Tablet kiosk mode',
+    'AI route optimization',
+    'Dedicated success manager'
+  ]
 };
 
 export const INITIAL_BUDGET_DATA: BudgetEntry[] = [
